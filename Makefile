@@ -72,6 +72,11 @@ all: gherkin compile
 
 # Translate .ss -> .sls via gherkin compiler (use make -j8 gherkin)
 gherkin: $(ALL_SLS)
+	@# Post-translation fixups
+	@for f in $O/*.sls; do \
+	  sed -i 's/(except (compat misc) last last-pair/(except (compat misc) last/g' "$$f" 2>/dev/null || true; \
+	  sed -i 's/(table? /(hash-table? /g' "$$f" 2>/dev/null || true; \
+	done
 
 # Compile .sls -> .so via Chez
 compile: gherkin
