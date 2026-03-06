@@ -54,7 +54,7 @@
   (define (aws4-canonical-request . args)
     (let* ([verb (symbol->string (or (kw-ref args 'verb: 'GET) 'GET))]
            [uri (or (kw-ref args 'uri: "/") "/")]
-           [query (or (kw-ref args 'query: #f) "")]
+           [query (kw-ref args 'query: #f)]
            [headers (or (kw-ref args 'headers: '()) '())]
            [body-hash (or (kw-ref args 'hash: #f) "")]
            [body-hash-hex (if (bytevector? body-hash)
@@ -75,10 +75,26 @@
       (string-append
         verb "\n"
         uri "\n"
-        (if (string? query) query "") "\n"
+        (canonical-query-string query) "\n"
         canonical-headers "\n"
         signed-headers "\n"
         body-hash-hex)))
+
+  ;; Build canonical query string from ((key :: value) ...) list
+  (define (canonical-query-string query)
+    (if (or (not query) (null? query) (equal? query ""))
+        ""
+        (let* ([pairs (map (lambda (p)
+                             (let ([k (car p)]
+                                   [v (if (and (pair? (cdr p)) (eq? (cadr p) '::))
+                                          (caddr p)
+                                          "")])
+                               (cons (uri-encode k) (uri-encode (if (string? v) v "")))))
+                           (if (list? query) query '()))]
+               [sorted (list-sort (lambda (a b) (string<? (car a) (car b))) pairs)])
+          (string-join
+            (map (lambda (p) (string-append (car p) "=" (cdr p))) sorted)
+            "&"))))
 
   ;; HMAC-SHA256
   (define (hmac-sha256 key data)
@@ -141,20 +157,19 @@
         "Signature=" signature)))
 
   ;; Extract part of scope string "20230101/us-east-1/sts"
+  ;; Split by / and return the idx-th part
   (define (scope-part scope idx)
-    (let loop ([s scope] [i 0] [start 0])
+    (let loop ([s scope] [i 0] [seg-start 0] [pos 0])
       (cond
-        [(= (string-length s) start)
-         (if (= i idx) "" "")]
-        [(char=? (string-ref s start) #\/)
+        [(= pos (string-length s))
          (if (= i idx)
-             (substring s (let find-start ([j (- start 1)])
-                            (if (or (< j 0) (char=? (string-ref s j) #\/))
-                                (+ j 1)
-                                (find-start (- j 1))))
-                         start)
-             (loop s (+ i 1) (+ start 1)))]
-        [else (loop s i (+ start 1))])))
+             (substring s seg-start pos)
+             "")]
+        [(char=? (string-ref s pos) #\/)
+         (if (= i idx)
+             (substring s seg-start pos)
+             (loop s (+ i 1) (+ pos 1) (+ pos 1)))]
+        [else (loop s i seg-start (+ pos 1))])))
 
   (define (string-trim s)
     (let* ([len (string-length s)]

@@ -13,9 +13,57 @@
     '(("http://s3.amazonaws.com/doc/2006-03-01/" . "s3")
       ("http://doc.s3.amazonaws.com/2006-03-01" . "s3")))
 
-  ;; TODO: needs a real XML->SXML parser
+  ;; Simple XML -> SXML parser for S3 responses
   (define (s3-parse-xml body)
-    (error "s3-parse-xml" "XML parsing not yet implemented - needs SXML parser"))
+    (let ([len (string-length body)] [pos 0])
+      (define (peek) (if (< pos len) (string-ref body pos) #\nul))
+      (define (advance!) (set! pos (+ pos 1)))
+      (define (skip-ws!) (let loop () (when (and (< pos len) (char-whitespace? (peek))) (advance!) (loop))))
+      (define (read-until c)
+        (let ([start pos]) (let loop () (cond [(>= pos len) (substring body start pos)] [(char=? (peek) c) (substring body start pos)] [else (advance!) (loop)]))))
+      (define (read-name)
+        (let ([start pos]) (let loop () (if (and (< pos len) (let ([c (peek)]) (or (char-alphabetic? c) (char-numeric? c) (memv c '(#\- #\_ #\: #\.))))) (begin (advance!) (loop)) (substring body start pos)))))
+      (define (read-text)
+        (let ([out (open-output-string)])
+          (let loop () (cond [(>= pos len) (get-output-string out)] [(char=? (peek) #\<) (get-output-string out)]
+            [(char=? (peek) #\&) (advance!) (let ([ent (read-until #\;)]) (advance!) (cond [(string=? ent "amp") (write-char #\& out)] [(string=? ent "lt") (write-char #\< out)] [(string=? ent "gt") (write-char #\> out)] [(string=? ent "quot") (write-char #\" out)] [(string=? ent "apos") (write-char #\' out)] [else (display "&" out) (display ent out) (display ";" out)]) (loop))]
+            [else (write-char (peek) out) (advance!) (loop)]))))
+      (define (skip-pi!)
+        (cond
+          [(and (< (+ pos 1) len) (char=? (string-ref body (+ pos 1)) #\?))
+           (let loop () (cond [(>= pos len) (void)] [(and (char=? (peek) #\?) (< (+ pos 1) len) (char=? (string-ref body (+ pos 1)) #\>)) (advance!) (advance!)] [else (advance!) (loop)]))]
+          [(and (< (+ pos 1) len) (char=? (string-ref body (+ pos 1)) #\!))
+           (advance!) (advance!)
+           (if (and (< (+ pos 1) len) (char=? (peek) #\-) (char=? (string-ref body (+ pos 1)) #\-))
+               (begin (advance!) (advance!) (let loop () (cond [(>= pos len) (void)] [(and (char=? (peek) #\-) (< (+ pos 2) len) (char=? (string-ref body (+ pos 1)) #\-) (char=? (string-ref body (+ pos 2)) #\>)) (advance!) (advance!) (advance!)] [else (advance!) (loop)])))
+               (let loop ([d 1]) (cond [(>= pos len) (void)] [(char=? (peek) #\>) (advance!) (when (> d 1) (loop (- d 1)))] [(char=? (peek) #\<) (advance!) (loop (+ d 1))] [else (advance!) (loop d)])))]))
+      (define (parse-element)
+        (skip-ws!)
+        (cond [(>= pos len) #f] [(not (char=? (peek) #\<)) #f]
+          [(and (< (+ pos 1) len) (or (char=? (string-ref body (+ pos 1)) #\?) (char=? (string-ref body (+ pos 1)) #\!))) (skip-pi!) (parse-element)]
+          [(and (< (+ pos 1) len) (char=? (string-ref body (+ pos 1)) #\/)) #f]
+          [else (advance!) (let ([name (read-name)]) (skip-ws!)
+            (let ([attrs '()])
+              (let attr-loop () (skip-ws!) (cond [(>= pos len) (void)] [(or (char=? (peek) #\>) (char=? (peek) #\/)) (void)]
+                [else (let ([an (read-name)]) (skip-ws!) (when (and (< pos len) (char=? (peek) #\=)) (advance!) (skip-ws!) (when (and (< pos len) (char=? (peek) #\")) (advance!) (let ([v (read-until #\")]) (advance!) (set! attrs (cons (list (string->symbol an) v) attrs))))) (attr-loop))]))
+              (cond [(and (< pos len) (char=? (peek) #\/)) (advance!) (when (and (< pos len) (char=? (peek) #\>)) (advance!))
+                     (if (null? attrs) (list (string->symbol name)) (list (string->symbol name) (cons '@ (reverse attrs))))]
+                [else (when (and (< pos len) (char=? (peek) #\>)) (advance!))
+                  (let ([children '()])
+                    (let child-loop () (cond [(>= pos len) (void)]
+                      [(and (char=? (peek) #\<) (< (+ pos 1) len) (char=? (string-ref body (+ pos 1)) #\/))
+                       (advance!) (advance!) (read-name) (skip-ws!) (when (and (< pos len) (char=? (peek) #\>)) (advance!))]
+                      [(char=? (peek) #\<) (let ([ch (parse-element)]) (when ch (set! children (cons ch children))) (child-loop))]
+                      [else (let ([t (read-text)]) (when (not (string=? (strim t) "")) (set! children (cons t children))) (child-loop))]))
+                    (let ([nc (reverse children)])
+                      (if (null? attrs) (cons (string->symbol name) nc)
+                          (cons (string->symbol name) (cons (cons '@ (reverse attrs)) nc)))))])))]))
+      (define (strim s)
+        (let* ([len (string-length s)]
+               [start (let loop ([i 0]) (if (and (< i len) (char-whitespace? (string-ref s i))) (loop (+ i 1)) i))]
+               [end (let loop ([i (- len 1)]) (if (and (>= i start) (char-whitespace? (string-ref s i))) (loop (- i 1)) (+ i 1)))])
+          (substring s start end)))
+      (let ([root (parse-element)]) (if root (list '*TOP* root) (list '*TOP*)))))
 
   (define (strip-ns sym)
     (let* ((s (symbol->string sym))

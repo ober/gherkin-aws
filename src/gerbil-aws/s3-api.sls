@@ -96,7 +96,7 @@
             (raise-s3-error 'S3Client "Must provide access key" "access-key"))
           (unless secret-key
             (raise-s3-error 'S3Client "Must provide secret key" "secret-key"))
-          (make-s3-client endpoint access-key secret-key region token)))))
+          (make-s3-client (or endpoint "s3.amazonaws.com") access-key secret-key region token)))))
   #|
   ;; Original case-lambda removed
   (define S3Client-original
@@ -125,7 +125,7 @@
                  S3Client
                  "Must provide secret key"
                  "secret-key"))
-             (make-s3-client endpoint access-key secret-key region
+             (make-s3-client (or endpoint "s3.amazonaws.com") access-key secret-key region
                token))))]
       [(endpoint)
        (let* ([profile #f]
@@ -150,7 +150,7 @@
                  S3Client
                  "Must provide secret key"
                  "secret-key"))
-             (make-s3-client endpoint access-key secret-key region
+             (make-s3-client (or endpoint "s3.amazonaws.com") access-key secret-key region
                token))))]
       [(endpoint profile)
        (let* ([access-key #f]
@@ -174,7 +174,7 @@
                  S3Client
                  "Must provide secret key"
                  "secret-key"))
-             (make-s3-client endpoint access-key secret-key region
+             (make-s3-client (or endpoint "s3.amazonaws.com") access-key secret-key region
                token))))]
       [(endpoint profile access-key)
        (let* ([secret-key #f] [region #f] [token #f])
@@ -195,7 +195,7 @@
                  S3Client
                  "Must provide secret key"
                  "secret-key"))
-             (make-s3-client endpoint access-key secret-key region
+             (make-s3-client (or endpoint "s3.amazonaws.com") access-key secret-key region
                token))))]
       [(endpoint profile access-key secret-key)
        (let* ([region #f] [token #f])
@@ -216,7 +216,7 @@
                  S3Client
                  "Must provide secret key"
                  "secret-key"))
-             (make-s3-client endpoint access-key secret-key region
+             (make-s3-client (or endpoint "s3.amazonaws.com") access-key secret-key region
                token))))]
       [(endpoint profile access-key secret-key region)
        (let* ([token #f])
@@ -237,7 +237,7 @@
                  S3Client
                  "Must provide secret key"
                  "secret-key"))
-             (make-s3-client endpoint access-key secret-key region
+             (make-s3-client (or endpoint "s3.amazonaws.com") access-key secret-key region
                token))))]
       [(endpoint profile access-key secret-key region token)
        (let-values ([(resolved-access-key resolved-secret-key resolved-region resolved-token)
@@ -268,7 +268,7 @@
            [body (pgetq 'body: args)]
            [content-type (pgetq 'content-type: args)]
            [extra-headers (or (pgetq 'extra-headers: args) (list))])
-      (let* ([now (current-date)]
+      (let* ([now (current-date 0)]
                   [ts (date->string now "~Y~m~dT~H~M~SZ")]
                   [scopets (date->string now "~Y~m~d")]
                   [scope (string-append
@@ -347,7 +347,7 @@
               [content-type #f]
               [extra-headers (list)])
          (let ([client client])
-           (let* ([now (current-date)]
+           (let* ([now (current-date 0)]
                   [ts (date->string now "~Y~m~dT~H~M~SZ")]
                   [scopets (date->string now "~Y~m~d")]
                   [scope (string-append
@@ -423,7 +423,7 @@
               [content-type #f]
               [extra-headers (list)])
          (let ([client client])
-           (let* ([now (current-date)]
+           (let* ([now (current-date 0)]
                   [ts (date->string now "~Y~m~dT~H~M~SZ")]
                   [scopets (date->string now "~Y~m~d")]
                   [scope (string-append
@@ -498,7 +498,7 @@
               [content-type #f]
               [extra-headers (list)])
          (let ([client client])
-           (let* ([now (current-date)]
+           (let* ([now (current-date 0)]
                   [ts (date->string now "~Y~m~dT~H~M~SZ")]
                   [scopets (date->string now "~Y~m~d")]
                   [scope (string-append
@@ -570,7 +570,7 @@
       [(client verb bucket key query)
        (let* ([body #f] [content-type #f] [extra-headers (list)])
          (let ([client client])
-           (let* ([now (current-date)]
+           (let* ([now (current-date 0)]
                   [ts (date->string now "~Y~m~dT~H~M~SZ")]
                   [scopets (date->string now "~Y~m~d")]
                   [scope (string-append
@@ -642,7 +642,7 @@
       [(client verb bucket key query body)
        (let* ([content-type #f] [extra-headers (list)])
          (let ([client client])
-           (let* ([now (current-date)]
+           (let* ([now (current-date 0)]
                   [ts (date->string now "~Y~m~dT~H~M~SZ")]
                   [scopets (date->string now "~Y~m~d")]
                   [scope (string-append
@@ -714,7 +714,7 @@
       [(client verb bucket key query body content-type)
        (let* ([extra-headers (list)])
          (let ([client client])
-           (let* ([now (current-date)]
+           (let* ([now (current-date 0)]
                   [ts (date->string now "~Y~m~dT~H~M~SZ")]
                   [scopets (date->string now "~Y~m~d")]
                   [scope (string-append
@@ -786,7 +786,7 @@
       [(client verb bucket key query body content-type
         extra-headers)
        (let ([client client])
-         (let* ([now (current-date)]
+         (let* ([now (current-date 0)]
                 [ts (date->string now "~Y~m~dT~H~M~SZ")]
                 [scopets (date->string now "~Y~m~d")]
                 [scope (string-append
