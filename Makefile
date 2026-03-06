@@ -6,14 +6,12 @@ COMPILE_ONE = $(COMPILE) --program compile-one.ss
 
 O = src/gerbil-aws
 
+# Manually maintained (not in ALL_SLS): aws-xml, aws-api, aws-json-api, ec2-xml,
+# s3-xml, s3-api, s3-buckets, s3-objects
 ALL_SLS = \
   $O/aws-creds.sls \
-  $O/aws-xml.sls \
-  $O/aws-api.sls \
-  $O/aws-json-api.sls \
   $O/ec2-params.sls \
   $O/ec2-params-test.sls \
-  $O/ec2-xml.sls \
   $O/ec2-xml-test.sls \
   $O/ec2-api.sls \
   $O/ec2-instances.sls \
@@ -32,11 +30,7 @@ ALL_SLS = \
   $O/ec2-tags.sls \
   $O/ec2-regions.sls \
   $O/ec2-launch-templates.sls \
-  $O/s3-xml.sls \
   $O/s3-xml-test.sls \
-  $O/s3-api.sls \
-  $O/s3-buckets.sls \
-  $O/s3-objects.sls \
   $O/sts-api.sls \
   $O/sts-operations.sls \
   $O/iam-api.sls \
@@ -116,15 +110,13 @@ help:
 $O/aws-creds.sls: compile-one.ss
 	-@$(COMPILE_ONE) aws/creds.ss aws-creds
 
-$O/aws-xml.sls: compile-one.ss
-	-@$(COMPILE_ONE) aws/xml.ss aws-xml
-
-# aws-api.sls is manually maintained (keyword dispatch, extra imports)
+# Manually maintained files (keyword dispatch, deferror, SXML fixes)
+# $O/aws-xml.sls: compile-one.ss
+# 	-@$(COMPILE_ONE) aws/xml.ss aws-xml
 # $O/aws-api.sls: $O/aws-xml.sls $O/aws-creds.sls
 # 	-@$(COMPILE_ONE) aws/api.ss aws-api
-
-$O/aws-json-api.sls: $O/aws-creds.sls
-	-@$(COMPILE_ONE) aws/json-api.ss aws-json-api
+# $O/aws-json-api.sls: $O/aws-creds.sls
+# 	-@$(COMPILE_ONE) aws/json-api.ss aws-json-api
 
 $O/ec2-params.sls: compile-one.ss
 	-@$(COMPILE_ONE) ec2/params.ss ec2-params
@@ -132,8 +124,8 @@ $O/ec2-params.sls: compile-one.ss
 $O/ec2-params-test.sls: $O/ec2-params.sls
 	-@$(COMPILE_ONE) ec2/params-test.ss ec2-params-test
 
-$O/ec2-xml.sls: compile-one.ss
-	-@$(COMPILE_ONE) ec2/xml.ss ec2-xml
+# $O/ec2-xml.sls: compile-one.ss
+# 	-@$(COMPILE_ONE) ec2/xml.ss ec2-xml
 
 $O/ec2-xml-test.sls: $O/ec2-xml.sls
 	-@$(COMPILE_ONE) ec2/xml-test.ss ec2-xml-test
@@ -189,20 +181,18 @@ $O/ec2-regions.sls: $O/ec2-params.sls $O/ec2-api.sls
 $O/ec2-launch-templates.sls: $O/ec2-params.sls $O/ec2-api.sls
 	-@$(COMPILE_ONE) ec2/launch-templates.ss ec2-launch-templates
 
-$O/s3-xml.sls: compile-one.ss
-	-@$(COMPILE_ONE) s3/xml.ss s3-xml
+# $O/s3-xml.sls: compile-one.ss
+# 	-@$(COMPILE_ONE) s3/xml.ss s3-xml
 
 $O/s3-xml-test.sls: $O/s3-xml.sls
 	-@$(COMPILE_ONE) s3/xml-test.ss s3-xml-test
 
-$O/s3-api.sls: $O/s3-xml.sls $O/aws-creds.sls
-	-@$(COMPILE_ONE) s3/api.ss s3-api
-
-$O/s3-buckets.sls: $O/s3-api.sls
-	-@$(COMPILE_ONE) s3/buckets.ss s3-buckets
-
-$O/s3-objects.sls: $O/s3-api.sls
-	-@$(COMPILE_ONE) s3/objects.ss s3-objects
+# $O/s3-api.sls: $O/s3-xml.sls $O/aws-creds.sls
+# 	-@$(COMPILE_ONE) s3/api.ss s3-api
+# $O/s3-buckets.sls: $O/s3-api.sls
+# 	-@$(COMPILE_ONE) s3/buckets.ss s3-buckets
+# $O/s3-objects.sls: $O/s3-api.sls
+# 	-@$(COMPILE_ONE) s3/objects.ss s3-objects
 
 $O/sts-api.sls: $O/aws-api.sls
 	-@$(COMPILE_ONE) sts/api.ss sts-api
