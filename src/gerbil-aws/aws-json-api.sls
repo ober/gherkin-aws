@@ -37,7 +37,7 @@
       number->string
       make-mutex
       with-output-to-string)
-    (except (compat misc) read-line call-with-output-string last
+    (except (compat misc) last
       iota)
     (compat json) (compat format) (compat sugar)
     (compat request) (compat sigv4)

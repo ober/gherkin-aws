@@ -38,7 +38,7 @@
       number->string
       make-mutex
       with-output-to-string)
-    (except (compat misc) read-line call-with-output-string last
+    (except (compat misc) last
       iota)
     (compat sugar) (compat request) (compat uri) (compat sigv4)
     (except (compat std-srfi-19) time->seconds)

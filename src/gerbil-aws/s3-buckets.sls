@@ -37,7 +37,7 @@
       number->string
       make-mutex
       with-output-to-string)
-    (except (compat misc) read-line call-with-output-string last
+    (except (compat misc) last
       iota)
     (compat request) (gerbil-aws s3-api))
   (define (list-buckets client)

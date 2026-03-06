@@ -36,7 +36,7 @@
       number->string
       make-mutex
       with-output-to-string)
-    (except (compat misc) read-line call-with-output-string last
+    (except (compat misc) last
       iota)
     (compat request) (compat std-text-base64)
     (only (compat std-crypto-digest) md5)
