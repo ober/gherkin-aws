@@ -4,7 +4,7 @@
 (library (gerbil-aws ec2-xml)
   (export ec2-parse-xml sxml->hash strip-ns sxml-items sxml-text ec2-response->hash)
   (import
-    (except (chezscheme) hash-table? make-hash-table iota path-extension)
+    (except (chezscheme) hash-table? make-hash-table iota path-extension filter remove partition fold-right)
     (runtime hash)
     (compat misc))
 

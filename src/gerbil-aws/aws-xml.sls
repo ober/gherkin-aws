@@ -6,7 +6,7 @@
   (export aws-parse-xml sxml->hash strip-ns sxml-items sxml-text aws-response->hash
           sxml-find sxml-e?)
   (import
-    (except (chezscheme) hash-table? make-hash-table iota path-extension)
+    (except (chezscheme) hash-table? make-hash-table iota path-extension filter remove partition fold-right)
     (runtime hash)
     (compat misc))
 
