@@ -1,0 +1,3 @@
+[submodule "gerbil-aws"]
+	path = gerbil-aws
+	url = https://github.com/ober/gerbil-aws.git
