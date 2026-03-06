@@ -37,8 +37,8 @@
       number->string
       make-mutex
       with-output-to-string)
-    (except (compat misc) last
-      iota)
+        (except (compat misc) last iota string-empty?
+      fold-right remove partition filter)
     (compat json) (compat format) (compat sugar)
     (compat request) (compat sigv4)
     (except (compat std-srfi-19) time->seconds)

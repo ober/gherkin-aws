@@ -36,8 +36,8 @@
       number->string
       make-mutex
       with-output-to-string)
-    (except (compat misc) last
-      iota)
+        (except (compat misc) last iota string-empty?
+      fold-right remove partition filter)
     (compat request) (compat std-text-base64)
     (only (compat std-crypto-digest) md5)
     (gerbil-aws s3-api))

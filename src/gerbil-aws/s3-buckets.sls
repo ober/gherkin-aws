@@ -37,8 +37,8 @@
       number->string
       make-mutex
       with-output-to-string)
-    (except (compat misc) last
-      iota)
+        (except (compat misc) last iota string-empty?
+      fold-right remove partition filter)
     (compat request) (gerbil-aws s3-api))
   (define (list-buckets client)
     (let ([result (s3-request/xml client 'verb: 'GET)])
